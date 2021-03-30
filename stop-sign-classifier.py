@@ -15,8 +15,9 @@ def detect(frame):
 	stop_signs = stop_cascade.detectMultiScale(frame_gray)
 
 	for (x, y, w, h) in stop_signs:
-		center = (x + w // 2, y + h // 2)
-		frame = cv.ellipse(frame, center, (w // 2, h // 2), 0, 0, 360, (255, 0, 255), 4)
+		size = w * h
+		frame = cv.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 3)
+		frame = cv.putText(frame, "size: %x" % size, (x, y), cv.FONT_HERSHEY_SIMPLEX, (0, 255, 0), 2)
 		cv.imshow("Stop Sign Classification", frame)
 
 # %%
