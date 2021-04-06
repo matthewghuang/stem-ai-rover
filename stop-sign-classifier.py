@@ -1,5 +1,7 @@
 import cv2 as cv
 import numpy as np
+from mss import mss
+from PIL import Image
 
 # load cascade
 stop_cascade = cv.CascadeClassifier()
@@ -16,28 +18,27 @@ def detect_and_draw(frame):
 
 	for (x, y, w, h) in stop_signs:
 		size = w * h
-		frame = cv.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0))
-		frame = cv.putText(frame, "size: %i" % size, (x, y), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0))
+		frame = cv.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+		frame = cv.putText(frame, "size: %i" % size, (x, y), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
 	cv.imshow("Classifier", frame)
 
-# setup camera
-camera = cv.VideoCapture(0)
-
-if not camera.isOpened:
-	print("Failed to open video capture")
-	exit(0)
+monitor = {
+	"left": 0,
+	"top": 0,
+	"width": 1280,
+	"height": 720
+}
 
 # detection loop
 while True:
-	ret, frame = camera.read()
+	with mss() as sct:
+		shot = sct.grab(monitor)
+		img = Image.frombytes("RGBA", (shot.width, shot.height), shot.bgra)
+		img_array = np.array(img)
 
-	if frame is None:
-		print("No frame captured")
-		break
-
-	detect_and_draw(frame)
-
+		detect_and_draw(img_array)
+	
 	if cv.waitKey(50) == 27:
 		cv.destroyAllWindows()
 		break
