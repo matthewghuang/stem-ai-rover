@@ -104,8 +104,7 @@ def move_routine():
 def pedestrian_routine():
     classifier.on_loop()
     n_peds = classifier.detect()
-    if n_peds > 0:
-        print("pedestrian detected")
+    print("pedestrian detection: ", n_peds)
 
 def main():
     while True:
