@@ -5,41 +5,50 @@ import socketio
 sio = socketio.Client()
 sio.connect("ws://localhost:3000")
 
-distance_sensor = DistanceSensor(echo=21, trigger=20, max_distance=1)
+echo_1, trigger_1 = 21, 20
+echo_2, trigger_2 = 21, 20
+echo_3, trigger_3 = 21, 20
 
-threshold = 0.3
+distance_sensor_1 = DistanceSensor(echo=echo_1, trigger=trigger_1)
+distance_sensor_2 = DistanceSensor(echo=echo_2, trigger=trigger_2)
+distance_sensor_3 = DistanceSensor(echo=echo_3, trigger=trigger_3)
 
-previous_action = "right"
+#    d2
+# d1----d3
+#  /    \
+# /      \
 
-def move(direction):
+threshold = 0.25
+
+def move(direction, sleep_time):
     sio.emit("set_direction", direction)
+    sleep(sleep_time)
+    sio.emit("set_direction", sleep_time)
+
+def move_routine():
+    distance_1 = distance_sensor_1.distance
+    distance_2 = distance_sensor_2.distance
+    distance_3 = distance_sensor_3.distance
+
+    if distance_1 >= threshold and distance_2 >= threshold and distance_3 >= threshold:
+        print("moving forward")
+        move("up", 1)
+    elif distance_1 < threshold:
+        print("Moving right")
+        move("right", 1)
+    elif distance_2 < threshold:
+        print("Moving back")
+        move("back", 1)
+    elif distance_3 < threshold:
+        print("Moving left")
+        move("left", 1)
+
 
 def main():
-    global previous_action
-
     while True:
-        distance = distance_sensor.distance
-
-        if distance >= threshold:
-            move("up")
-            sleep(0.5)
-            move("")
-        else:
-            if previous_action == "right":
-                move("left")
-                sleep(0.5)
-                move("")
-                previous_action = "left"
-                print("moving left to avoid obstacle")
-            elif previous_action == "left":
-                move("right")
-                sleep(1)
-                move("")
-                previous_action = "right"
-                print("moving right to avoid obstacle")
-
-        print("Distance: {}".format(distance_sensor.distance))
-        sleep(0.1)
+        move_routine()
+                    
+        sleep(0.5)
 
 if __name__ == "__main__":
     main()
