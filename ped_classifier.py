@@ -1,38 +1,21 @@
 import cv2 as cv
-import time
-import socketio
 
-sio = socketio.Client()
-sio.connect("ws://10.32.239.124:3000")
+class PedestrianClassifier():
+    def __init__(self):
+        self.hog = cv.HogDescriptor()
+        self.hog.setSVMDetector(cv.HOGDescriptor_getDefaultPeopleDetector())
+        self.cap = cv.VideoCapture()
+        self.frame = None
 
-hog = cv.HOGDescriptor()
-hog.setSVMDetector(cv.HOGDescriptor_getDefaultPeopleDetector())
+    def __del__(self):
+        self.cap.release()
 
-cap = cv.VideoCapture("./man.mp4")
+    def on_loop(self):
+        ret, self.frame = cap.read()
 
-while True:
-    ret, frame = cap.read()
+    def detect(self):
+        tmp_frame = cv.resize(self.frame, (640, 480))
+        regions, _ = hog.detectMultiScale(tmp_frame)
 
-    if not ret:
-        print("Failed to read video")
-        break
+        return len(regions)
 
-    height, width, layers = frame.shape
-
-    frame = cv.resize(frame, (640, 480))
-
-    regions, _ = hog.detectMultiScale(frame)
-
-    if len(regions) > 0:
-        sio.emit("set_direction", "")
-
-    for x, y, w, h in regions:
-        cv.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255))
-
-    cv.imshow("Video", frame)
-
-    if cv.waitKey(10) == 27:
-        break
-
-cap.release()
-cv.destroyAllWindows()
