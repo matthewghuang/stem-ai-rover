@@ -1,10 +1,14 @@
 from gpiozero import DistanceSensor
 from time import sleep
 from PCA9685 import PCA9685
+from ped_classifier import PedestrianClassifier
+
+use_ultrasonic = False
+use_camera = True
 
 echo_1, trigger_1 = 21, 20
-echo_2, trigger_2 = 21, 20
-echo_3, trigger_3 = 21, 20
+echo_2, trigger_2 = 19, 18
+echo_3, trigger_3 = 17, 16
 
 distance_sensor_1 = DistanceSensor(echo=echo_1, trigger=trigger_1)
 distance_sensor_2 = DistanceSensor(echo=echo_2, trigger=trigger_2)
@@ -49,7 +53,6 @@ class MotorDriver():
                 pwm.setLevel(self.BIN1, 0)
                 pwm.setLevel(self.BIN2, 1)
             else:
-
                 pwm.setLevel(self.BIN1, 1)
                 pwm.setLevel(self.BIN2, 0)
 
@@ -60,6 +63,7 @@ class MotorDriver():
             pwm.setDutycycle(self.PWMB, 0)
 
 motor = MotorDriver()
+classifier = PedestrianClassifier()
 
 def move(direction, sleep_time):
     if direction == "forward":
@@ -97,10 +101,19 @@ def move_routine():
         print("Moving left")
         move("left", 1)
 
+def pedestrian_routine():
+    classifier.on_loop()
+    n_peds = classifier.detect()
+    if n_peds > 0:
+        print("pedestrian detected")
 
 def main():
     while True:
-        move_routine()
+        if use_ultrasonic:
+            move_routine()
+
+        if use_camera:
+            pedestrian_routine()
                     
         sleep(0.5)
 
